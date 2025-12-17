@@ -74,14 +74,11 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }) {
                 />
               </svg>
             </Link>
-
-            {/* Admin Dashboard button (admin-only) */}
-            {user?.role === "admin" && (
-              <Link to="/admin/dashboard" className={linkButtonClasses}>
-                Dashboard
-              </Link>
-            )}
-
+           {user?.role === "admin" && (
+  <Link to="/dashboard" className={linkButtonClasses}>
+    Dashboard
+  </Link>
+)}
             <button onClick={handleLogout} className={linkButtonClasses}>
               Logout
             </button>

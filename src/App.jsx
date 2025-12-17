@@ -10,6 +10,8 @@ import Navbar from "./components/Navbar";
 import ResumeBuilderTemplate1 from "./pages/ResumeBuilderTemplate1";
 import ResumeBuilderTemplate2 from "./pages/ResumeBuilderTemplate2";
 import { sampleUsers } from "./data/sampleUsers";
+import Dashboard from "./pages/Dashboard";
+
 
 
 function AppWrapper() {
@@ -40,6 +42,8 @@ function AppWrapper() {
       <Route path="/profile" element={<Profile />} />
       <Route path="/resume-builder-template1" element={<ResumeBuilderTemplate1 />} />
       <Route path="/resume-builder-template2" element={<ResumeBuilderTemplate2 />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+
 
       </Routes>
     </>

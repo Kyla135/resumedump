@@ -1,48 +1,72 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-// Template previews
-import template1 from "../assets/templates/template1.png";
-import template2 from "../assets/templates/template2.png";
-import template3 from "../assets/templates/template3.png";
-import template4 from "../assets/templates/template4.png";
-import template5 from "../assets/templates/template5.png";
-import template6 from "../assets/templates/template6.png";
-import template7 from "../assets/templates/template7.png";
-import template8 from "../assets/templates/template8.png";
-import template9 from "../assets/templates/template9.png";
 
 export default function Landing({ isLoggedIn }) {
   const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [templates, setTemplates] = useState([]);
 
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
 
-  const templates = [
-    { id: 1, img: template1, name: "Classic Two-Column Header Resume" },
-    { id: 2, img: template2, name: "Modern Sidebar Resume" },
-    { id: 3, img: template3, name: "Visual Skills Bar Resume" },
-    { id: 4, img: template4, name: "Personal Brand & Philosophy Resume" },
-    { id: 5, img: template5, name: "Minimalist Competency-Focused Resume" },
-    { id: 6, img: template6, name: "Minimalist Structured Professional Resume" },
-    { id: 7, img: template7, name: "Visual Skills & Experience Focused Resume" },
-    { id: 8, img: template8, name: "Asymmetrical Creative Sidebar Resume" },
-    { id: 9, img: template9, name: "Color-Coded Service Skills Resume" },
-  ];
+useEffect(() => {
+  async function fetchTemplates() {
+    try {
+      const res = await fetch("http://localhost:3000/api/resumes/templates"); // public route
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
-  const handleCustomize = (id) => {
+      const data = await res.json();
+      const mappedTemplates = data.map((t) => ({
+        id: t._id,
+        img: `http://localhost:3000/${t.image}`,
+        name: t.title,
+      }));
+      setTemplates(mappedTemplates);
+    } catch (err) {
+      console.error("Failed to fetch templates:", err);
+    }
+  }
+
+  fetchTemplates();
+}, []);
+
+  // Create resume in MongoDB when user clicks a template
+  const handleCreateResume = async (templateId) => {
     if (!isLoggedIn) {
       navigate("/login");
-    } else if (currentUser?.isAdmin) {
-      alert("Admin cannot customize user templates!");
-    } else {
-      if (id === 1) {
-        navigate("/resume-builder-template1");
-      } else {
-        navigate("/resume-builder-template2");
-      }
+      return;
     }
-    setSelectedTemplate(null);
+
+    const template = templates.find((t) => t.id === templateId);
+    if (!template) return;
+
+    try {
+      const res = await fetch("http://localhost:3000/api/resumes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          template: template.name,
+          title: template.name,
+          sections: [],
+        }),
+      });
+
+      const data = await res.json();
+      console.log("Resume created:", data);
+
+      // Redirect to builder
+      navigate("/resume-builder-template1"); // or decide based on templateId if needed
+
+      setSelectedTemplate(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCustomize = (id) => {
+    handleCreateResume(id);
   };
 
   return (
@@ -59,11 +83,9 @@ export default function Landing({ isLoggedIn }) {
         <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
           Find Your Perfect Resume Template
         </h1>
-
         <p className="text-lg text-gray-600">
           Select a professionally designed template to start building your resume.
         </p>
-
         <p className="text-sm text-gray-500 mt-2">
           Step 1 of 3 · Choose a resume template
         </p>
@@ -83,21 +105,12 @@ export default function Landing({ isLoggedIn }) {
               border: "2px solid #c9b48f",
             }}
           >
-            {template.id === 1 && (
-              <span className="absolute top-2 left-2 bg-[#bfa77a] text-white text-xs px-2 py-1 rounded-md">
-                Recommended
-              </span>
-            )}
-
             <img
               src={template.img}
               alt={template.name}
               className="w-full h-[14rem] object-contain rounded-md mb-2"
             />
-
-            <p className="text-sm font-medium text-gray-700 text-center">
-              {template.name}
-            </p>
+            <p className="text-sm font-medium text-gray-700 text-center">{template.name}</p>
           </div>
         ))}
       </div>
@@ -138,9 +151,7 @@ export default function Landing({ isLoggedIn }) {
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   {selectedTemplate.name}
                 </h2>
-                <p className="text-sm text-gray-600">
-                  8.5 × 11 inches · ATS-friendly
-                </p>
+                <p className="text-sm text-gray-600">8.5 × 11 inches · ATS-friendly</p>
               </div>
 
               {!currentUser?.isAdmin && (
@@ -149,7 +160,7 @@ export default function Landing({ isLoggedIn }) {
                   className="w-full px-6 py-3 rounded-xl bg-[#bfa77a] text-[#F5F1E8]
                              font-semibold hover:bg-[#a78f5f] transition"
                 >
-                  Customize Template
+                  Create Resume
                 </button>
               )}
             </div>

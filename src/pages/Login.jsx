@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { getUserFromToken } from "../lib/users";
+import { saveToken, getUserFromToken } from "../lib/auth";
 
 export default function Login({ setIsLoggedIn }) {
   const navigate = useNavigate();
@@ -13,7 +13,6 @@ export default function Login({ setIsLoggedIn }) {
     setError("");
 
     try {
-      // Call backend login
       const res = await fetch("http://localhost:3000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -28,18 +27,11 @@ export default function Login({ setIsLoggedIn }) {
       }
 
       // Save JWT token
-      localStorage.setItem("token", data.token);
-
-      // Optionally save user info
-      localStorage.setItem("userEmail", data.user.email);
-      localStorage.setItem("userName", data.user.fullName);
-
+      saveToken(data.token);
       setIsLoggedIn(true);
 
-      // Get role from token
       const user = getUserFromToken();
 
-      // Redirect based on role
       if (user?.role === "admin") {
         navigate("/admin/dashboard");
       } else {
@@ -52,14 +44,7 @@ export default function Login({ setIsLoggedIn }) {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      style={{
-        background: "linear-gradient(135deg, #ffffff, #fef1dc, #bfa77a)",
-        backgroundSize: "200% 200%",
-        animation: "shine 15s ease-in-out infinite",
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center">
       <form
         className="max-w-md w-full p-6 bg-white rounded-xl shadow space-y-4"
         onSubmit={handleSubmit}
@@ -90,24 +75,11 @@ export default function Login({ setIsLoggedIn }) {
 
         <p className="text-sm text-center mt-2">
           Don’t have an account?{" "}
-          <Link
-            to="/signup"
-            className="text-[#bfa77a] underline hover:text-[#a78f5f] transition-colors"
-          >
+          <Link to="/signup" className="text-[#bfa77a] underline hover:text-[#a78f5f]">
             Sign up
           </Link>
         </p>
       </form>
-
-      <style>
-        {`
-          @keyframes shine {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-        `}
-      </style>
     </div>
   );
 }
